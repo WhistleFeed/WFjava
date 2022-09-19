@@ -11,7 +11,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Whistlefeed whistlefeed = findViewById(R.id.whistlefeed);
-        whistlefeed.setadds("YOUR_PUBLISHER_TOKEN","1");
+        whistlefeed.setadds("21701655717485nYBzur_3267","3");
 
     }
 }

@@ -5,15 +5,35 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Whistlefeed  extends ConstraintLayout {
      Context mContext;
      AttributeSet attrs;
      int def;
      WebView webView;
+    RequestQueue mRequestQueue;
+    StringRequest mStringRequest;
+    String BASE_URL="";
+    String STAGING_URL="http://13.232.216.75/whistle-pixel/feedAds.php?";
+    String LIVE_URL="https://pixel.whistle.mobi/feedAds.php?";
+    Boolean islivelink=false;
+    String packageName="";
+    String scripttags="";
 
     public Whistlefeed(@NonNull Context context) {
         super(context);
@@ -45,15 +65,53 @@ public void initview()
 
 public void setadds(String publisher_token,String pencil)
 {
-    String packageName = getContext().getPackageName();
+
+    Log.d("printpubtoken",publisher_token);
+     packageName = getContext().getPackageName();
+    if(islivelink)
+    {
+        BASE_URL=LIVE_URL;
+    }
+    else
+    {
+        BASE_URL=STAGING_URL;
+        Log.d("baseurlforstaging",BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken"+publisher_token);
+    }
+
+    mRequestQueue = Volley.newRequestQueue(mContext);
+
+    // String Request initialized
+    mStringRequest = new StringRequest(Request.Method.GET, BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken="+publisher_token, new Response.Listener<String>() {
+        @Override
+        public void onResponse(String response) {
+            Log.i("", "RESPONSE :" + response.toString());
+            try {
+                JSONObject jObject = new JSONObject(response);
+                Log.d("jsonresponse",jObject.toString());
+
+                 scripttags = jObject.getString("data");
+                Log.d("scripttags",scripttags);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+            Toast.makeText(mContext, "Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+        }
+    }, new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError error) {
+            Log.i("", "Error :" + error.toString());
+        }
+    });
+
+    mRequestQueue.add(mStringRequest);
     Log.e("getpackagename ",packageName);
-    String Scripttags="<!DOCTYPE html><html><body><script src=https://pixel.whistle.mobi/feedAds.js size="+pencil+" token="+publisher_token+" packagename="+packageName+"></script> </body> </html>";
+   // String Scripttags="<!DOCTYPE html><html><body><script src=https://pixel.whistle.mobi/feedAds.js size="+pencil+" token="+publisher_token+" packagename="+packageName+"></script> </body> </html>";
     WebSettings webSettings = webView.getSettings();
     webSettings.setJavaScriptEnabled(true);
     WebViewClientImpl webViewClient = new WebViewClientImpl(mContext);
     webView.setWebViewClient(webViewClient);
-    webView.loadData(Scripttags, "text/html", "UTF-8");
-}
-
-
+    webView.loadData(scripttags, "text/html", "UTF-8");
+ }
 }

@@ -31,9 +31,8 @@ public class Whistlefeed  extends ConstraintLayout {
     String BASE_URL="";
     String STAGING_URL="http://13.232.216.75/whistle-pixel/feedAds.php?";
     String LIVE_URL="https://pixel.whistle.mobi/feedAds.php?";
-    Boolean islivelink=false;
-    String packageName="";
-    String scripttags="";
+    Boolean islivelink=true;
+
 
     public Whistlefeed(@NonNull Context context) {
         super(context);
@@ -67,20 +66,26 @@ public void setadds(String publisher_token,String pencil)
 {
 
     Log.d("printpubtoken",publisher_token);
-     packageName = getContext().getPackageName();
+   String packageName = getContext().getPackageName();
+    Log.e("getpackagename ",packageName);
+
     if(islivelink)
     {
+        Log.e("getpackagename ",islivelink.toString());
+
         BASE_URL=LIVE_URL;
+        Log.d("baseurlforlive",BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken="+publisher_token);
     }
     else
     {
         BASE_URL=STAGING_URL;
-        Log.d("baseurlforstaging",BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken"+publisher_token);
+        Log.d("baseurlforstaging",BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken="+publisher_token);
     }
 
     mRequestQueue = Volley.newRequestQueue(mContext);
-
     // String Request initialized
+    Log.d("FCEFCECE",mRequestQueue.toString());
+
     mStringRequest = new StringRequest(Request.Method.GET, BASE_URL+"packagename="+packageName+"&size="+pencil+"&apiToken="+publisher_token, new Response.Listener<String>() {
         @Override
         public void onResponse(String response) {
@@ -89,10 +94,21 @@ public void setadds(String publisher_token,String pencil)
                 JSONObject jObject = new JSONObject(response);
                 Log.d("jsonresponse",jObject.toString());
 
-                 scripttags = jObject.getString("data");
-                Log.d("scripttags",scripttags);
+                if(jObject.getString("status").equals("Success"))
+                {
+                  String scripttags = jObject.getString("data");
+                     //String Scripttags="<!DOCTYPE html><html><body><script src=https://pixel.whistle.mobi/feedAds.js size="+pencil+" token="+publisher_token+" packagename="+packageName+"></script> </body> </html>";
+                    WebSettings webSettings = webView.getSettings();
+                    webSettings.setJavaScriptEnabled(true);
+                    WebViewClientImpl webViewClient = new WebViewClientImpl(mContext);
+                    webView.setWebViewClient(webViewClient);
+                    webView.loadData(scripttags, "text/html", "UTF-8");
+                    Log.d("scripttags",scripttags);
+                }
+
             } catch (JSONException e) {
                 e.printStackTrace();
+                Log.d("sdad",e.toString());
             }
 
 
@@ -103,15 +119,9 @@ public void setadds(String publisher_token,String pencil)
         public void onErrorResponse(VolleyError error) {
             Log.i("", "Error :" + error.toString());
         }
-    });
 
+    });
     mRequestQueue.add(mStringRequest);
-    Log.e("getpackagename ",packageName);
-   // String Scripttags="<!DOCTYPE html><html><body><script src=https://pixel.whistle.mobi/feedAds.js size="+pencil+" token="+publisher_token+" packagename="+packageName+"></script> </body> </html>";
-    WebSettings webSettings = webView.getSettings();
-    webSettings.setJavaScriptEnabled(true);
-    WebViewClientImpl webViewClient = new WebViewClientImpl(mContext);
-    webView.setWebViewClient(webViewClient);
-    webView.loadData(scripttags, "text/html", "UTF-8");
+
  }
 }
